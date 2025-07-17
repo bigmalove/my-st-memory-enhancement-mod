@@ -345,9 +345,10 @@ export const DERIVED = {
  * @description 该控制器用于管理系统级别的数据、事件、设置等数据，包括组件加载、文件读写、代码路径记录等
  */
 export const SYSTEM = {
+    extensionName: 'st-memory-enhancement', // 默认值，将被 index.js 覆盖
     getTemplate: (name) => {
         console.log('getTemplate', name);
-        return APP.renderExtensionTemplateAsync('third-party/st-memory-enhancement/assets/templates', name);
+        return APP.renderExtensionTemplateAsync(`third-party/${SYSTEM.extensionName}/assets/templates`, name);
     },
 
     codePathLog: function (context = '', deep = 2) {

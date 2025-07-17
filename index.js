@@ -15,6 +15,20 @@ import { reloadCurrentChat } from "/script.js";
 import {executeTranslation} from "./services/translate.js";
 
 
+// 动态确定插件名称
+try {
+    const scriptPath = document.currentScript.src;
+    const pathParts = scriptPath.split('/');
+    const extensionDirIndex = pathParts.indexOf('third-party');
+    if (extensionDirIndex !== -1 && pathParts.length > extensionDirIndex + 1) {
+        SYSTEM.extensionName = pathParts[extensionDirIndex + 1];
+        console.log(`[Memory Enhancement] Detected extension folder name: ${SYSTEM.extensionName}`);
+    }
+} catch (e) {
+    console.error('[Memory Enhancement] Failed to dynamically determine extension folder name.', e);
+}
+
+
 console.log("______________________记忆插件：开始加载______________________")
 
 let reloadDebounceTimer;
