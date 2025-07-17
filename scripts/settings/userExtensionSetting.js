@@ -403,8 +403,8 @@ function InitBinging() {
         apiKeyDebounceTimer = setTimeout(async () => {
             try {
                 const rawKey = $(this).val();
-                const result = processApiKey(rawKey, generateDeviceId());
-                USER.IMPORTANT_USER_PRIVACY_DATA.custom_api_key = result.encryptedResult.encrypted || result.encryptedResult;
+                const result = processApiKey(rawKey, generateDeviceId()); // generateDeviceId() 实际上不再需要
+                USER.IMPORTANT_USER_PRIVACY_DATA.custom_api_key = result.processedKey; // 使用新的字段
                 USER.saveSettings && USER.saveSettings(); // 保存设置
                 EDITOR.success(result.message);
             } catch (error) {

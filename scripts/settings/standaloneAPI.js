@@ -13,47 +13,27 @@ let currentApiKeyIndex = 0;// 用于记录当前使用的API Key的索引
  * @param {*} deviceId - 设备ID
  * @returns {string} 加密后的字符串
  */
-export function encryptXor(rawKey, deviceId) {
-    // 处理多个逗号分隔的API Key
-    const keys = rawKey.split(',').map(k => k.trim()).filter(k => k.trim().length > 0);
-    const uniqueKeys = [...new Set(keys)];
-    const uniqueKeyString = uniqueKeys.join(',');
-
-    // 如果有重复Key，返回去重数量和加密后的Key
-    if (keys.length !== uniqueKeys.length) {
-        return {
-            encrypted: Array.from(uniqueKeyString).map((c, i) =>
-                c.charCodeAt(0) ^ deviceId.charCodeAt(i % deviceId.length)
-            ).map(c => c.toString(16).padStart(2, '0')).join(''),
-            duplicatesRemoved: keys.length - uniqueKeys.length
-        };
-    }
-
-    // 没有重复Key时直接返回加密结果
-    return Array.from(uniqueKeyString).map((c, i) =>
-        c.charCodeAt(0) ^ deviceId.charCodeAt(i % deviceId.length)
-    ).map(c => c.toString(16).padStart(2, '0')).join('');
-}
-
-export function processApiKey(rawKey, deviceId) {
+export function processApiKey(rawKey, deviceId) { // deviceId 将不再被使用
     try {
         const keys = rawKey.split(',').map(k => k.trim()).filter(k => k.trim().length > 0);
-        const invalidKeysCount = rawKey.split(',').length - keys.length; // 计算无效Key的数量
-        const encryptedResult = encryptXor(rawKey, deviceId);
+        const uniqueKeys = [...new Set(keys)];
+        const uniqueKeyString = uniqueKeys.join(',');
+        const duplicatesRemoved = keys.length - uniqueKeys.length;
+        const invalidKeysCount = rawKey.split(',').length - keys.length;
         const totalKeys = rawKey.split(',').length;
-        const remainingKeys = totalKeys - (encryptedResult.duplicatesRemoved || 0); // 剩余去掉无效和重复之后Key的数量
+        const remainingKeys = totalKeys - duplicatesRemoved - invalidKeysCount;
 
         let message = `已更新API Key，共${remainingKeys}个Key`;
-        if(totalKeys - remainingKeys > 0 || invalidKeysCount > 0){
+        if(duplicatesRemoved > 0 || invalidKeysCount > 0){
             const removedParts = [];
-            if (totalKeys - remainingKeys > 0) removedParts.push(`${totalKeys - remainingKeys}个重复Key`);
+            if (duplicatesRemoved > 0) removedParts.push(`${duplicatesRemoved}个重复Key`);
             if (invalidKeysCount > 0) removedParts.push(`${invalidKeysCount}个空值`);
             message += `（已去除${removedParts.join('，')}）`;
         }
         return {
-            encryptedResult,
-            encrypted: encryptedResult.encrypted,
-            duplicatesRemoved: encryptedResult.duplicatesRemoved,
+            // 返回原始 key string，而不是加密结果
+            processedKey: uniqueKeyString,
+            duplicatesRemoved: duplicatesRemoved,
             invalidKeysCount: invalidKeysCount,
             remainingKeys: remainingKeys,
             totalKeys: totalKeys,
@@ -72,33 +52,11 @@ export function processApiKey(rawKey, deviceId) {
  */
 export async function getDecryptedApiKey() { // Export this function
     try {
-        const encrypted = USER.IMPORTANT_USER_PRIVACY_DATA.custom_api_key;
-        const deviceId = localStorage.getItem('st_device_id');
-        if (!encrypted || !deviceId) return null;
-
-        return await decryptXor(encrypted, deviceId);
+        // 直接返回存储的原始密钥
+        const rawKey = USER.IMPORTANT_USER_PRIVACY_DATA.custom_api_key;
+        return rawKey || null;
     } catch (error) {
-        console.error('API Key 解密失败:', error);
-        return null;
-    }
-}
-
-/**
- * 解密
- * @param {string} encrypted - 加密字符串
- * @param {string} deviceId - 设备ID
- * @returns {string|null} 解密后的字符串，如果解密失败则返回null
- */
-async function decryptXor(encrypted, deviceId) {
-    try {
-        const bytes = encrypted.match(/.{1,2}/g).map(b =>
-            parseInt(b, 16)
-        );
-        return String.fromCharCode(...bytes.map((b, i) =>
-            b ^ deviceId.charCodeAt(i % deviceId.length)
-        ));
-    } catch(e) {
-        console.error('解密失败:', e);
+        console.error('API Key 获取失败:', error);
         return null;
     }
 }

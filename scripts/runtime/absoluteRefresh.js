@@ -412,7 +412,7 @@ export async function rebuildTableActions(force = false, silentUpdate = USER.tab
                 if (!silentUpdate) {
                     // 将uniqueActions内容推送给用户确认是否继续
                     const confirmContent = confirmTheOperationPerformed(clonedTables);
-                    const tableRefreshPopup = new EDITOR.Popup(confirmContent, EDITOR.POPUP_TYPE.TEXT, '', { okButton: "继续", cancelButton: "取消" });
+                    const tableRefreshPopup = new EDITOR.Popup(confirmContent, EDITOR.POPUP_TYPE.CONFIRM, '', { okButton: "继续", cancelButton: "取消" });
                     EDITOR.clear();
                     await tableRefreshPopup.show();
                     if (!tableRefreshPopup.result) {
